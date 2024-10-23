@@ -1,0 +1,12 @@
+# Dockerfile for the Artificial Neural Network using TensorFlow with GPU support
+FROM tensorflow/tensorflow:latest-gpu
+
+# Install python depenencies
+WORKDIR /home
+RUN apt-get update
+RUN pip install pandas && pip install -U scikit-learn && pip install matplotlib
+
+# Copy the current directory contents into the container at /home
+COPY . /home
+# Set the environment variable for TensorFlow to use GPU
+ENV TF_FORCE_GPU_ALLOW_GROWTH=true
