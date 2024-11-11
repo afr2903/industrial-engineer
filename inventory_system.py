@@ -6,22 +6,32 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 class RawMaterialInventory:
-    def __init__(self, unit_cost, ordering_cost, holding_cost, lead_time, reorder_point, reorder_quantity):
-        self.unit_cost = unit_cost
-        self.ordering_cost = ordering_cost
-        self.holding_cost = holding_cost
+    def __init__(self, lead_time, reorder_point, reorder_quantity, max_capacity):
+        self.max_capacity = max_capacity
         self.lead_time = lead_time
+        self.time_since_last_order = 0
         self.reorder_point = reorder_point
         self.reorder_quantity = reorder_quantity
-        self.current_stock = reorder_quantity
+        self.inventory_position = reorder_quantity
+        self.inventory_on_hand = reorder_quantity
 
     def update(self, demand):
-        if self.current_stock <= demand:
+        self.time_since_last_order += 1
+        if self.time_since_last_order == self.lead_time:
+            self.inventory_on_hand = self.inventory_position
+        self.inventory_on_hand -= demand
+        self.inventory_position -= demand
+        if self.inventory_position <= self.reorder_point:
             self.order()
-        self.current_stock -= demand
 
     def order(self):
-        self.current_stock += self.reorder_quantity
+        self.inventory_position += self.reorder_quantity
+        self.inventory_position = min(self.inventory_position, self.max_capacity)
+        self.time_since_last_order = 0
+
+    def set_order_point_and_quantity(self, reorder_point, reorder_quantity):
+        self.reorder_point = reorder_point
+        self.reorder_quantity = reorder_quantity
 
 class Machine:
     def __init__(self, max_production_rate, mttf, mttr, defect_rate):
@@ -35,13 +45,14 @@ class Machine:
 
     def operate(self):
         if self.status == "operational":
-            if random.random() < 1 / self.mttf:
+            if random.random() < self.mttf:
                 self.status = "failed"
-                self.downtime = random.expovariate(1 / self.mttr)
+                self.downtime = 1
+                return 0
             return self.production_rate * (1 - self.defect_rate)
         else:
-            self.downtime -= 1
-            if self.downtime <= 0:
+            self.downtime += 1
+            if random.random() < self.mttr:
                 self.status = "operational"
             return 0
 
@@ -76,11 +87,14 @@ class ProducedGoods:
 
 class SimulationEnvironment:
     def __init__(self):
-        self.raw_material = RawMaterialInventory(10, 100, 2, 5, 50, 200)
-        self.machine1 = Machine(10, 100, 10, 0.05)
-        self.machine2 = Machine(8, 120, 15, 0.03)
+        self.raw_material = RawMaterialInventory(lead_time=8,
+                                                 reorder_point=10,
+                                                 reorder_quantity=30,
+                                                 max_capacity=100)
+        self.machine1 = Machine(10, 0.05, 0.2, 0.05)  # Treated as failure and repair rates
+        self.machine2 = Machine(8, 0.03, 0.3, 0.03)
         self.buffer = Buffer(1, 50)
-        self.produced_goods = ProducedGoods(3, 200, 50)
+        self.produced_goods = ProducedGoods(3, 100, 50)
         self.demand_mean = 7
         self.demand_std = 2
 
@@ -88,7 +102,7 @@ class SimulationEnvironment:
         demand = max(0, int(np.random.normal(self.demand_mean, self.demand_std)))
         
         # Raw material consumption
-        raw_material_consumed = min(self.raw_material.current_stock, self.machine1.production_rate)
+        raw_material_consumed = min(self.raw_material.inventory_on_hand, self.machine1.production_rate)
         self.raw_material.update(raw_material_consumed)
         
         # Machine 1 production
@@ -104,7 +118,7 @@ class SimulationEnvironment:
         fulfilled_demand = self.produced_goods.remove(demand)
 
         return {
-            "raw_material_stock": self.raw_material.current_stock,
+            "raw_material_stock": self.raw_material.inventory_on_hand,
             "production_m1": production_m1,
             "production_m2": production_m2,
             "buffer_level": self.buffer.capacity,
@@ -135,20 +149,20 @@ class SimulationUI:
     def create_widgets(self):
         # Raw Material Inventory
         ttk.Label(self.master, text="Raw Material Inventory").grid(row=0, column=0, columnspan=2, pady=5)
-        ttk.Label(self.master, text="Unit Cost:").grid(row=1, column=0, padx=5, pady=2)
-        self.raw_unit_cost = ttk.Entry(self.master)
-        self.raw_unit_cost.insert(0, str(self.env.raw_material.unit_cost))
-        self.raw_unit_cost.grid(row=1, column=1, padx=5, pady=2)
+        ttk.Label(self.master, text="Lead time:").grid(row=1, column=0, padx=5, pady=2)
+        self.raw_lead_time = ttk.Entry(self.master)
+        self.raw_lead_time.insert(0, str(self.env.raw_material.lead_time))
+        self.raw_lead_time.grid(row=1, column=1, padx=5, pady=2)
         
-        ttk.Label(self.master, text="Ordering Cost:").grid(row=2, column=0, padx=5, pady=2)
-        self.raw_ordering_cost = ttk.Entry(self.master)
-        self.raw_ordering_cost.insert(0, str(self.env.raw_material.ordering_cost))
-        self.raw_ordering_cost.grid(row=2, column=1, padx=5, pady=2)
+        ttk.Label(self.master, text="Max capacity:").grid(row=2, column=0, padx=5, pady=2)
+        self.raw_max_capacity= ttk.Entry(self.master)
+        self.raw_max_capacity.insert(0, str(self.env.raw_material.max_capacity))
+        self.raw_max_capacity.grid(row=2, column=1, padx=5, pady=2)
         
-        ttk.Label(self.master, text="Holding Cost:").grid(row=3, column=0, padx=5, pady=2)
-        self.raw_holding_cost = ttk.Entry(self.master)
-        self.raw_holding_cost.insert(0, str(self.env.raw_material.holding_cost))
-        self.raw_holding_cost.grid(row=3, column=1, padx=5, pady=2)
+        #ttk.Label(self.master, text="Holding Cost:").grid(row=3, column=0, padx=5, pady=2)
+        #self.raw_holding_cost = ttk.Entry(self.master)
+        #self.raw_holding_cost.insert(0, str(self.env.raw_material.holding_cost))
+        #self.raw_holding_cost.grid(row=3, column=1, padx=5, pady=2)
         
         # Machine 1
         ttk.Label(self.master, text="Machine 1").grid(row=4, column=0, columnspan=2, pady=5)
@@ -180,7 +194,7 @@ class SimulationUI:
         self.pg_holding_cost = ttk.Entry(self.master)
         self.pg_holding_cost.insert(0, str(self.env.produced_goods.holding_cost))
         self.pg_holding_cost.grid(row=11, column=1, padx=5, pady=2)
-        
+
         ttk.Label(self.master, text="Selling Cost:").grid(row=12, column=0, padx=5, pady=2)
         self.pg_selling_cost = ttk.Entry(self.master)
         self.pg_selling_cost.insert(0, str(self.env.produced_goods.selling_cost))
@@ -189,20 +203,20 @@ class SimulationUI:
         ttk.Button(self.master, text="Update", command=self.update_simulation).grid(row=13, column=0, columnspan=2, pady=10)
         
         # Create canvas for machine and buffer visualization
-        self.canvas = tk.Canvas(self.master, width=400, height=200)
-        self.canvas.grid(row=0, column=2, rowspan=14, padx=10, pady=10)
+        self.canvas = tk.Canvas(self.master, width=550, height=300)
+        self.canvas.grid(row=0, column=3, rowspan=16, padx=10, pady=10)
         
     def create_plot(self):
         self.fig, self.ax = plt.subplots(figsize=(6, 4))
         self.canvas_plot = FigureCanvasTkAgg(self.fig, master=self.master)
         self.canvas_plot_widget = self.canvas_plot.get_tk_widget()
-        self.canvas_plot_widget.grid(row=0, column=5, rowspan=14, padx=15, pady=15)
+        self.canvas_plot_widget.grid(row=0, column=5, rowspan=15, padx=10, pady=10)
         
     def update_simulation(self):
         # Update simulation parameters
-        self.env.raw_material.unit_cost = float(self.raw_unit_cost.get())
-        self.env.raw_material.ordering_cost = float(self.raw_ordering_cost.get())
-        self.env.raw_material.holding_cost = float(self.raw_holding_cost.get())
+        self.env.raw_material.lead_time = float(self.raw_lead_time.get())
+        self.env.raw_material.max_capacity = float(self.raw_max_capacity.get())
+        #self.env.raw_material.holding_cost = float(self.raw_holding_cost.get())
         self.env.machine1.max_production_rate = float(self.m1_max_rate.get())
         self.env.machine1.mttf = float(self.m1_mttf.get())
         self.env.buffer.holding_cost = float(self.buffer_holding_cost.get())
@@ -250,14 +264,14 @@ class SimulationUI:
         buffer_fill = self.env.buffer.capacity / self.env.buffer.max_capacity
         self.canvas.create_rectangle(250, 50, 300, 100, outline="black")
         self.canvas.create_rectangle(250, 100 - buffer_fill * 50, 300, 100, fill="blue")
-        self.canvas.create_text(255, 120, text=f"Buffer: {self.env.buffer.capacity}/{self.env.buffer.max_capacity}")
+        self.canvas.create_text(270, 120, text=f"Buffer: {self.env.buffer.capacity}/{self.env.buffer.max_capacity}")
         
         # Draw produced goods
-        self.canvas.create_rectangle(500, 50, 550, 100, fill="yellow")
-        self.canvas.create_text(525, 120, text="Produced Goods")
+        self.canvas.create_rectangle(450, 50, 500, 100, fill="yellow")
+        self.canvas.create_text(475, 120, text="Produced Goods")
         
         # Draw inventory levels
-        self.canvas.create_text(75, 180, text=f"Raw: {self.env.raw_material.current_stock}")
+        self.canvas.create_text(75, 180, text=f"Raw: {self.env.raw_material.inventory_on_hand}")
         self.canvas.create_text(325, 180, text=f"Produced: {self.env.produced_goods.capacity}")
         
     def run(self):
