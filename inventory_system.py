@@ -97,6 +97,8 @@ class SimulationEnvironment:
         self.produced_goods = ProducedGoods(3, 100, 50)
         self.demand_mean = 7
         self.demand_std = 2
+        self.accumulated_demand = 0
+        self.accumulated_fulfilled_demand = 0
 
     def step(self):
         demand = max(0, int(np.random.normal(self.demand_mean, self.demand_std)))
@@ -106,16 +108,19 @@ class SimulationEnvironment:
         self.raw_material.update(raw_material_consumed)
         
         # Machine 1 production
-        production_m1 = self.machine1.operate()
+        production_m1 = int(self.machine1.operate())
         self.buffer.add(production_m1)
 
         # Machine 2 production
         available_from_buffer = self.buffer.remove(self.machine2.production_rate)
-        production_m2 = min(self.machine2.operate(), available_from_buffer)
+        production_m2 = int(min(self.machine2.operate(), available_from_buffer))
         self.produced_goods.add(production_m2)
 
         # Fulfill demand
         fulfilled_demand = self.produced_goods.remove(demand)
+
+        self.accumulated_demand += demand
+        self.accumulated_fulfilled_demand += fulfilled_demand
 
         return {
             "raw_material_stock": self.raw_material.inventory_on_hand,
@@ -123,8 +128,8 @@ class SimulationEnvironment:
             "production_m2": production_m2,
             "buffer_level": self.buffer.capacity,
             "produced_goods_level": self.produced_goods.capacity,
-            "demand": demand,
-            "fulfilled_demand": fulfilled_demand,
+            "demand": self.accumulated_demand,
+            "fulfilled_demand": self.accumulated_fulfilled_demand,
             "m1_status": self.machine1.status,
             "m2_status": self.machine2.status
         }
@@ -138,9 +143,12 @@ class SimulationUI:
         
         self.history = {
             'raw_material_stock': [],
+            'production_m1': [],
+            'production_m2': [],
             'buffer_level': [],
             'produced_goods_level': [],
-            'demand': []
+            'demand': [],
+            'fulfilled_demand': []
         }
         
         self.create_widgets()
@@ -158,6 +166,11 @@ class SimulationUI:
         self.raw_max_capacity= ttk.Entry(self.master)
         self.raw_max_capacity.insert(0, str(self.env.raw_material.max_capacity))
         self.raw_max_capacity.grid(row=2, column=1, padx=5, pady=2)
+        
+        #ttk.Label(self.master, text="Holding Cost:").grid(row=3, column=0, padx=5, pady=2)
+        #self.raw_holding_cost = ttk.Entry(self.master)
+        #self.raw_holding_cost.insert(0, str(self.env.raw_material.holding_cost))
+        #self.raw_holding_cost.grid(row=3, column=1, padx=5, pady=2)
         
         #ttk.Label(self.master, text="Holding Cost:").grid(row=3, column=0, padx=5, pady=2)
         #self.raw_holding_cost = ttk.Entry(self.master)
@@ -199,18 +212,43 @@ class SimulationUI:
         self.pg_selling_cost = ttk.Entry(self.master)
         self.pg_selling_cost.insert(0, str(self.env.produced_goods.selling_cost))
         self.pg_selling_cost.grid(row=12, column=1, padx=5, pady=2)
+
+        # Simulation Parameters
         
-        ttk.Button(self.master, text="Update", command=self.update_simulation).grid(row=13, column=0, columnspan=2, pady=10)
+        ttk.Label(self.master, text="Mean Demand:").grid(row=13, column=0, padx=5, pady=2)
+        self.demand_mean = ttk.Entry(self.master)
+        self.demand_mean.insert(0, str(self.env.demand_mean))
+        self.demand_mean.grid(row=13, column=1, padx=5, pady=2)
+        
+        ttk.Label(self.master, text="Demand Standard Deviation:").grid(row=14, column=0, padx=5, pady=2)
+        self.demand_std = ttk.Entry(self.master)
+        self.demand_std.insert(0, str(self.env.demand_std))
+        self.demand_std.grid(row=14, column=1, padx=5, pady=2)
+        
+        ttk.Button(self.master, text="Update", command=self.update_simulation).grid(row=15, column=0, columnspan=2, pady=10)
         
         # Create canvas for machine and buffer visualization
-        self.canvas = tk.Canvas(self.master, width=550, height=300)
-        self.canvas.grid(row=0, column=3, rowspan=16, padx=10, pady=10)
+        self.canvas = tk.Canvas(self.master, width=550, height=500)
+        self.canvas.grid(row=0, column=3, rowspan=20, padx=10, pady=10)
         
     def create_plot(self):
-        self.fig, self.ax = plt.subplots(figsize=(6, 4))
-        self.canvas_plot = FigureCanvasTkAgg(self.fig, master=self.master)
-        self.canvas_plot_widget = self.canvas_plot.get_tk_widget()
-        self.canvas_plot_widget.grid(row=0, column=5, rowspan=15, padx=10, pady=10)
+        # Demand fullfilled vs demand
+        self.demand_fig, self.demand_ax = plt.subplots(figsize=(4, 3))
+        self.demand_canvas_plot = FigureCanvasTkAgg(self.demand_fig, master=self.master)
+        self.demand_canvas_plot_widget = self.demand_canvas_plot.get_tk_widget()
+        self.demand_canvas_plot_widget.grid(row=0, column=5, rowspan=6, padx=3, pady=3)
+
+        # Inventory levels
+        self.inventory_fig, self.inventory_ax = plt.subplots(figsize=(4, 3))
+        self.inventory_canvas_plot = FigureCanvasTkAgg(self.inventory_fig, master=self.master)
+        self.inventory_canvas_plot_widget = self.inventory_canvas_plot.get_tk_widget()
+        self.inventory_canvas_plot_widget.grid(row=6, column=5, rowspan=6, padx=3, pady=3)
+
+        # Machine status
+        self.machine_fig, self.machine_ax = plt.subplots(figsize=(4, 3))
+        self.machine_canvas_plot = FigureCanvasTkAgg(self.machine_fig, master=self.master)
+        self.machine_canvas_plot_widget = self.machine_canvas_plot.get_tk_widget()
+        self.machine_canvas_plot_widget.grid(row=12, column=5, rowspan=6, padx=5, pady=3)
         
     def update_simulation(self):
         # Update simulation parameters
@@ -223,29 +261,64 @@ class SimulationUI:
         self.env.buffer.max_capacity = int(self.buffer_max_capacity.get())
         self.env.produced_goods.holding_cost = float(self.pg_holding_cost.get())
         self.env.produced_goods.selling_cost = float(self.pg_selling_cost.get())
+        self.env.demand_mean = float(self.demand_mean.get())
+        self.env.demand_std = float(self.demand_std.get())
         
         # Run simulation for 100 steps
         for _ in range(100):
             state = self.env.step()
             self.history['raw_material_stock'].append(state['raw_material_stock'])
+            self.history['production_m1'].append(state['production_m1'])
+            self.history['production_m2'].append(state['production_m2'])
             self.history['buffer_level'].append(state['buffer_level'])
             self.history['produced_goods_level'].append(state['produced_goods_level'])
             self.history['demand'].append(state['demand'])
+            self.history['fulfilled_demand'].append(state['fulfilled_demand'])
         
         self.update_plot()
         self.update_visualization()
         
     def update_plot(self):
-        self.ax.clear()
-        self.ax.plot(self.history['raw_material_stock'][-100:], label='Raw Material')
-        self.ax.plot(self.history['buffer_level'][-100:], label='Buffer')
-        self.ax.plot(self.history['produced_goods_level'][-100:], label='Produced Goods')
-        self.ax.plot(self.history['demand'][-100:], label='Demand')
-        self.ax.legend()
-        self.ax.set_title('Manufacturing Simulation')
-        self.ax.set_xlabel('Time')
-        self.ax.set_ylabel('Level')
-        self.canvas_plot.draw()
+        self.demand_ax.clear()
+        self.demand_ax.plot(self.history['demand'], label="Demand")
+        self.demand_ax.plot(self.history['fulfilled_demand'], label="Fulfilled Demand")
+        self.demand_ax.legend()
+        self.demand_ax.set_title("Demand vs Fulfilled Demand")
+        self.demand_ax.set_xlabel("Time")
+        self.demand_ax.set_ylabel("Demand")
+        self.demand_fig.canvas.draw()
+
+        self.inventory_ax.clear()
+        self.inventory_ax.plot(self.history['raw_material_stock'], label="Raw Material")
+        self.inventory_ax.plot(self.history['buffer_level'], label="Buffer")
+        self.inventory_ax.plot(self.history['produced_goods_level'], label="Produced Goods")
+        self.inventory_ax.legend()
+        self.inventory_ax.set_title("Inventory Levels")
+        self.inventory_ax.set_xlabel("Time")
+        self.inventory_ax.set_ylabel("Inventory Level")
+        self.inventory_fig.canvas.draw()
+
+        self.machine_ax.clear()
+        self.machine_ax.plot(self.history['production_m1'], label="Machine 1")
+        self.machine_ax.plot(self.history['production_m2'], label="Machine 2")
+        self.machine_ax.legend()
+        self.machine_ax.set_title("Production Rate")
+        self.machine_ax.set_xlabel("Time")
+        self.machine_ax.set_ylabel("Production Rate")
+        self.machine_fig.canvas.draw()
+
+        # Clear all history
+        self.env.accumulated_demand = 0
+        self.env.accumulated_fulfilled_demand = 0
+        self.history = {
+            'raw_material_stock': [],
+            'production_m1': [],
+            'production_m2': [],
+            'buffer_level': [],
+            'produced_goods_level': [],
+            'demand': [],
+            'fulfilled_demand': []
+        }
         
     def update_visualization(self):
         self.canvas.delete("all")
