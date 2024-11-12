@@ -45,14 +45,14 @@ class Machine:
 
     def operate(self):
         if self.status == "operational":
-            if random.random() < self.mttf:
+            if random.random() < 1 / self.mttf:
                 self.status = "failed"
                 self.downtime = 1
                 return 0
             return self.production_rate * (1 - self.defect_rate)
         else:
             self.downtime += 1
-            if random.random() < self.mttr:
+            if random.random() < 1 / self.mttr:
                 self.status = "operational"
             return 0
 
@@ -91,9 +91,11 @@ class SimulationEnvironment:
                                                  reorder_point=10,
                                                  reorder_quantity=30,
                                                  max_capacity=100)
-        self.machine1 = Machine(10, 0.05, 0.2, 0.05)  # Treated as failure and repair rates
-        self.machine2 = Machine(8, 0.03, 0.3, 0.03)
-        self.buffer = Buffer(1, 50)
+        self.machine1 = Machine(max_production_rate=10,
+                                mttf=80, mttr=20, defect_rate=0.05)
+        self.machine2 = Machine(max_production_rate=8,
+                                mttf=75, mttr=10, defect_rate=0.03)
+        self.buffer = Buffer(holding_cost=1, max_capacity=50)
         self.produced_goods = ProducedGoods(3, 100, 50)
         self.demand_mean = 7
         self.demand_std = 2
@@ -178,77 +180,97 @@ class SimulationUI:
         #self.raw_holding_cost.grid(row=3, column=1, padx=5, pady=2)
         
         # Machine 1
-        ttk.Label(self.master, text="Machine 1").grid(row=4, column=0, columnspan=2, pady=5)
-        ttk.Label(self.master, text="Max Production Rate:").grid(row=5, column=0, padx=5, pady=2)
+        ttk.Label(self.master, text="Machine 1").grid(row=0, column=2, columnspan=2, pady=5)
+        ttk.Label(self.master, text="Max Production Rate:").grid(row=1, column=2, padx=5, pady=2)
         self.m1_max_rate = ttk.Entry(self.master)
         self.m1_max_rate.insert(0, str(self.env.machine1.max_production_rate))
-        self.m1_max_rate.grid(row=5, column=1, padx=5, pady=2)
+        self.m1_max_rate.grid(row=1, column=3, padx=5, pady=2)
         
-        ttk.Label(self.master, text="MTTF:").grid(row=6, column=0, padx=5, pady=2)
+        ttk.Label(self.master, text="MTTF:").grid(row=2, column=2, padx=5, pady=2)
         self.m1_mttf = ttk.Entry(self.master)
         self.m1_mttf.insert(0, str(self.env.machine1.mttf))
-        self.m1_mttf.grid(row=6, column=1, padx=5, pady=2)
+        self.m1_mttf.grid(row=2, column=3, padx=5, pady=2)
+
+        ttk.Label(self.master, text="MTTR:").grid(row=3, column=2, padx=5, pady=2)
+        self.m1_mttr = ttk.Entry(self.master)
+        self.m1_mttr.insert(0, str(self.env.machine1.mttr))
+        self.m1_mttr.grid(row=3, column=3, padx=5, pady=2)
+
+        ttk.Label(self.master, text="Defect Rate:").grid(row=4, column=2, padx=5, pady=2)
+        self.m1_defect_rate = ttk.Entry(self.master)
+        self.m1_defect_rate.insert(0, str(self.env.machine1.defect_rate))
+        self.m1_defect_rate.grid(row=4, column=3, padx=5, pady=2)
+
+        # Machine 2
+        ttk.Label(self.master, text="Machine 2").grid(row=5, column=2, columnspan=2, pady=5)
+        ttk.Label(self.master, text="Max Production Rate:").grid(row=6, column=2, padx=5, pady=2)
+        self.m2_max_rate = ttk.Entry(self.master)
+        self.m2_max_rate.insert(0, str(self.env.machine2.max_production_rate))
+        self.m2_max_rate.grid(row=6, column=3, padx=5, pady=2)
+
+        ttk.Label(self.master, text="MTTF:").grid(row=7, column=2, padx=5, pady=2)
+        self.m2_mttf = ttk.Entry(self.master)
+        self.m2_mttf.insert(0, str(self.env.machine2.mttf))
+        self.m2_mttf.grid(row=7, column=3, padx=5, pady=2)
+
+        ttk.Label(self.master, text="MTTR:").grid(row=8, column=2, padx=5, pady=2)
+        self.m2_mttr = ttk.Entry(self.master)
+        self.m2_mttr.insert(0, str(self.env.machine2.mttr))
+        self.m2_mttr.grid(row=8, column=3, padx=5, pady=2)
+
+        ttk.Label(self.master, text="Defect Rate:").grid(row=9, column=2, padx=5, pady=2)
+        self.m2_defect_rate = ttk.Entry(self.master)
+        self.m2_defect_rate.insert(0, str(self.env.machine2.defect_rate))
+        self.m2_defect_rate.grid(row=9, column=3, padx=5, pady=2)
         
         # Buffer
-        ttk.Label(self.master, text="Buffer").grid(row=7, column=0, columnspan=2, pady=5)
-        ttk.Label(self.master, text="Holding Cost:").grid(row=8, column=0, padx=5, pady=2)
+        ttk.Label(self.master, text="Buffer").grid(row=3, column=0, columnspan=2, pady=5)
+        ttk.Label(self.master, text="Holding Cost:").grid(row=4, column=0, padx=5, pady=2)
         self.buffer_holding_cost = ttk.Entry(self.master)
         self.buffer_holding_cost.insert(0, str(self.env.buffer.holding_cost))
-        self.buffer_holding_cost.grid(row=8, column=1, padx=5, pady=2)
+        self.buffer_holding_cost.grid(row=4, column=1, padx=5, pady=2)
         
-        ttk.Label(self.master, text="Max Capacity:").grid(row=9, column=0, padx=5, pady=2)
+        ttk.Label(self.master, text="Max Capacity:").grid(row=5, column=0, padx=5, pady=2)
         self.buffer_max_capacity = ttk.Entry(self.master)
         self.buffer_max_capacity.insert(0, str(self.env.buffer.max_capacity))
-        self.buffer_max_capacity.grid(row=9, column=1, padx=5, pady=2)
+        self.buffer_max_capacity.grid(row=5, column=1, padx=5, pady=2)
         
         # Produced Goods
-        ttk.Label(self.master, text="Produced Goods").grid(row=10, column=0, columnspan=2, pady=5)
-        ttk.Label(self.master, text="Holding Cost:").grid(row=11, column=0, padx=5, pady=2)
+        ttk.Label(self.master, text="Produced Goods").grid(row=6, column=0, columnspan=2, pady=5)
+        ttk.Label(self.master, text="Holding Cost:").grid(row=7, column=0, padx=5, pady=2)
         self.pg_holding_cost = ttk.Entry(self.master)
         self.pg_holding_cost.insert(0, str(self.env.produced_goods.holding_cost))
-        self.pg_holding_cost.grid(row=11, column=1, padx=5, pady=2)
+        self.pg_holding_cost.grid(row=7, column=1, padx=5, pady=2)
 
-        ttk.Label(self.master, text="Selling Cost:").grid(row=12, column=0, padx=5, pady=2)
+        ttk.Label(self.master, text="Selling Cost:").grid(row=8, column=0, padx=5, pady=2)
         self.pg_selling_cost = ttk.Entry(self.master)
         self.pg_selling_cost.insert(0, str(self.env.produced_goods.selling_cost))
-        self.pg_selling_cost.grid(row=12, column=1, padx=5, pady=2)
+        self.pg_selling_cost.grid(row=8, column=1, padx=5, pady=2)
 
-        # Simulation Parameters
-        
-        ttk.Label(self.master, text="Mean Demand:").grid(row=13, column=0, padx=5, pady=2)
+        # Simulation Parameters 
+        ttk.Label(self.master, text="Mean Demand:").grid(row=9, column=0, padx=5, pady=2)
         self.demand_mean = ttk.Entry(self.master)
         self.demand_mean.insert(0, str(self.env.demand_mean))
-        self.demand_mean.grid(row=13, column=1, padx=5, pady=2)
+        self.demand_mean.grid(row=9, column=1, padx=5, pady=2)
         
-        ttk.Label(self.master, text="Demand Standard Deviation:").grid(row=14, column=0, padx=5, pady=2)
+        ttk.Label(self.master, text="Demand Standard Deviation:").grid(row=10, column=0, padx=5, pady=2)
         self.demand_std = ttk.Entry(self.master)
         self.demand_std.insert(0, str(self.env.demand_std))
-        self.demand_std.grid(row=14, column=1, padx=5, pady=2)
+        self.demand_std.grid(row=10, column=1, padx=5, pady=2)
         
-        ttk.Button(self.master, text="Update", command=self.update_simulation).grid(row=15, column=0, columnspan=2, pady=10)
+        ttk.Button(self.master, text="Update", command=self.update_simulation).grid(row=11, column=0, columnspan=2, pady=10)
         
         # Create canvas for machine and buffer visualization
-        self.canvas = tk.Canvas(self.master, width=550, height=500)
-        self.canvas.grid(row=0, column=3, rowspan=20, padx=10, pady=10)
+        self.canvas = tk.Canvas(self.master, width=550, height=370)
+        self.canvas.grid(row=12, column=0, rowspan=5, columnspan=4, padx=3, pady=0)
         
     def create_plot(self):
         # Demand fullfilled vs demand
-        self.demand_fig, self.demand_ax = plt.subplots(figsize=(4, 3))
-        self.demand_canvas_plot = FigureCanvasTkAgg(self.demand_fig, master=self.master)
-        self.demand_canvas_plot_widget = self.demand_canvas_plot.get_tk_widget()
-        self.demand_canvas_plot_widget.grid(row=0, column=5, rowspan=6, padx=3, pady=3)
+        self.fig, self.ax = plt.subplots(3, sharex=True, figsize=(8, 8))
+        self.canvas_plot = FigureCanvasTkAgg(self.fig, master=self.master)
+        self.canvas_plot_widget = self.canvas_plot.get_tk_widget()
+        self.canvas_plot_widget.grid(row=0, column=5, rowspan=16, columnspan=2, padx=3, pady=3)
 
-        # Inventory levels
-        self.inventory_fig, self.inventory_ax = plt.subplots(figsize=(4, 3))
-        self.inventory_canvas_plot = FigureCanvasTkAgg(self.inventory_fig, master=self.master)
-        self.inventory_canvas_plot_widget = self.inventory_canvas_plot.get_tk_widget()
-        self.inventory_canvas_plot_widget.grid(row=6, column=5, rowspan=6, padx=3, pady=3)
-
-        # Machine status
-        self.machine_fig, self.machine_ax = plt.subplots(figsize=(4, 3))
-        self.machine_canvas_plot = FigureCanvasTkAgg(self.machine_fig, master=self.master)
-        self.machine_canvas_plot_widget = self.machine_canvas_plot.get_tk_widget()
-        self.machine_canvas_plot_widget.grid(row=12, column=5, rowspan=6, padx=5, pady=3)
         
     def update_simulation(self):
         # Update simulation parameters
@@ -257,6 +279,12 @@ class SimulationUI:
         #self.env.raw_material.holding_cost = float(self.raw_holding_cost.get())
         self.env.machine1.max_production_rate = float(self.m1_max_rate.get())
         self.env.machine1.mttf = float(self.m1_mttf.get())
+        self.env.machine1.mttr = float(self.m1_mttr.get())
+        self.env.machine1.defect_rate = float(self.m1_defect_rate.get())
+        self.env.machine2.max_production_rate = float(self.m2_max_rate.get())
+        self.env.machine2.mttf = float(self.m2_mttf.get())
+        self.env.machine2.mttr = float(self.m2_mttr.get())
+        self.env.machine2.defect_rate = float(self.m2_defect_rate.get())
         self.env.buffer.holding_cost = float(self.buffer_holding_cost.get())
         self.env.buffer.max_capacity = int(self.buffer_max_capacity.get())
         self.env.produced_goods.holding_cost = float(self.pg_holding_cost.get())
@@ -279,33 +307,29 @@ class SimulationUI:
         self.update_visualization()
         
     def update_plot(self):
-        self.demand_ax.clear()
-        self.demand_ax.plot(self.history['demand'], label="Demand")
-        self.demand_ax.plot(self.history['fulfilled_demand'], label="Fulfilled Demand")
-        self.demand_ax.legend()
-        self.demand_ax.set_title("Demand vs Fulfilled Demand")
-        self.demand_ax.set_xlabel("Time")
-        self.demand_ax.set_ylabel("Demand")
-        self.demand_fig.canvas.draw()
+        self.ax[0].clear()
+        self.ax[0].plot(self.history['demand'], label="Demand")
+        self.ax[0].plot(self.history['fulfilled_demand'], label="Fulfilled Demand")
+        self.ax[0].legend()
+        #self.ax[0].set_title("Demand vs Fulfilled Demand")
+        self.ax[0].set_ylabel("Demand")
 
-        self.inventory_ax.clear()
-        self.inventory_ax.plot(self.history['raw_material_stock'], label="Raw Material")
-        self.inventory_ax.plot(self.history['buffer_level'], label="Buffer")
-        self.inventory_ax.plot(self.history['produced_goods_level'], label="Produced Goods")
-        self.inventory_ax.legend()
-        self.inventory_ax.set_title("Inventory Levels")
-        self.inventory_ax.set_xlabel("Time")
-        self.inventory_ax.set_ylabel("Inventory Level")
-        self.inventory_fig.canvas.draw()
+        self.ax[1].clear()
+        self.ax[1].plot(self.history['raw_material_stock'], label="Raw Material")
+        self.ax[1].plot(self.history['buffer_level'], label="Buffer")
+        self.ax[1].plot(self.history['produced_goods_level'], label="Produced Goods")
+        self.ax[1].legend()
+        #self.ax[1].set_title("Inventory Levels")
+        self.ax[1].set_ylabel("Inventory Level")
 
-        self.machine_ax.clear()
-        self.machine_ax.plot(self.history['production_m1'], label="Machine 1")
-        self.machine_ax.plot(self.history['production_m2'], label="Machine 2")
-        self.machine_ax.legend()
-        self.machine_ax.set_title("Production Rate")
-        self.machine_ax.set_xlabel("Time")
-        self.machine_ax.set_ylabel("Production Rate")
-        self.machine_fig.canvas.draw()
+        self.ax[2].clear()
+        self.ax[2].plot(self.history['production_m1'], label="Machine 1")
+        self.ax[2].plot(self.history['production_m2'], label="Machine 2")
+        self.ax[2].legend()
+        #self.ax[2].set_title("Production Rate")
+        self.ax[2].set_xlabel("Time")
+        self.ax[2].set_ylabel("Production Rate")
+        self.fig.canvas.draw()
 
         # Clear all history
         self.env.accumulated_demand = 0
