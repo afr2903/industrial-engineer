@@ -159,12 +159,12 @@ class SimulationUI:
     def create_widgets(self):
         # Raw Material Inventory
         ttk.Label(self.master, text="Raw Material Inventory").grid(row=0, column=0, columnspan=2, pady=5)
-        ttk.Label(self.master, text="Lead time:").grid(row=1, column=0, padx=5, pady=2)
+        ttk.Label(self.master, text="Lead time (hours):").grid(row=1, column=0, padx=5, pady=2)
         self.raw_lead_time = ttk.Entry(self.master)
         self.raw_lead_time.insert(0, str(self.env.raw_material.lead_time))
         self.raw_lead_time.grid(row=1, column=1, padx=5, pady=2)
         
-        ttk.Label(self.master, text="Max capacity:").grid(row=2, column=0, padx=5, pady=2)
+        ttk.Label(self.master, text="Max capacity (units):").grid(row=2, column=0, padx=5, pady=2)
         self.raw_max_capacity= ttk.Entry(self.master)
         self.raw_max_capacity.insert(0, str(self.env.raw_material.max_capacity))
         self.raw_max_capacity.grid(row=2, column=1, padx=5, pady=2)
@@ -181,79 +181,79 @@ class SimulationUI:
         
         # Machine 1
         ttk.Label(self.master, text="Machine 1").grid(row=0, column=2, columnspan=2, pady=5)
-        ttk.Label(self.master, text="Max Production Rate:").grid(row=1, column=2, padx=5, pady=2)
+        ttk.Label(self.master, text="Max Production Rate (units/h):").grid(row=1, column=2, padx=5, pady=2)
         self.m1_max_rate = ttk.Entry(self.master)
         self.m1_max_rate.insert(0, str(self.env.machine1.max_production_rate))
         self.m1_max_rate.grid(row=1, column=3, padx=5, pady=2)
         
-        ttk.Label(self.master, text="MTTF:").grid(row=2, column=2, padx=5, pady=2)
+        ttk.Label(self.master, text="MTTF (hours):").grid(row=2, column=2, padx=5, pady=2)
         self.m1_mttf = ttk.Entry(self.master)
         self.m1_mttf.insert(0, str(self.env.machine1.mttf))
         self.m1_mttf.grid(row=2, column=3, padx=5, pady=2)
 
-        ttk.Label(self.master, text="MTTR:").grid(row=3, column=2, padx=5, pady=2)
+        ttk.Label(self.master, text="MTTR (hours):").grid(row=3, column=2, padx=5, pady=2)
         self.m1_mttr = ttk.Entry(self.master)
         self.m1_mttr.insert(0, str(self.env.machine1.mttr))
         self.m1_mttr.grid(row=3, column=3, padx=5, pady=2)
 
-        ttk.Label(self.master, text="Defect Rate:").grid(row=4, column=2, padx=5, pady=2)
+        ttk.Label(self.master, text="Defect Rate (%):").grid(row=4, column=2, padx=5, pady=2)
         self.m1_defect_rate = ttk.Entry(self.master)
         self.m1_defect_rate.insert(0, str(self.env.machine1.defect_rate))
         self.m1_defect_rate.grid(row=4, column=3, padx=5, pady=2)
 
         # Machine 2
         ttk.Label(self.master, text="Machine 2").grid(row=5, column=2, columnspan=2, pady=5)
-        ttk.Label(self.master, text="Max Production Rate:").grid(row=6, column=2, padx=5, pady=2)
+        ttk.Label(self.master, text="Max Production Rate (units/h):").grid(row=6, column=2, padx=5, pady=2)
         self.m2_max_rate = ttk.Entry(self.master)
         self.m2_max_rate.insert(0, str(self.env.machine2.max_production_rate))
         self.m2_max_rate.grid(row=6, column=3, padx=5, pady=2)
 
-        ttk.Label(self.master, text="MTTF:").grid(row=7, column=2, padx=5, pady=2)
+        ttk.Label(self.master, text="MTTF (hours):").grid(row=7, column=2, padx=5, pady=2)
         self.m2_mttf = ttk.Entry(self.master)
         self.m2_mttf.insert(0, str(self.env.machine2.mttf))
         self.m2_mttf.grid(row=7, column=3, padx=5, pady=2)
 
-        ttk.Label(self.master, text="MTTR:").grid(row=8, column=2, padx=5, pady=2)
+        ttk.Label(self.master, text="MTTR (hours):").grid(row=8, column=2, padx=5, pady=2)
         self.m2_mttr = ttk.Entry(self.master)
         self.m2_mttr.insert(0, str(self.env.machine2.mttr))
         self.m2_mttr.grid(row=8, column=3, padx=5, pady=2)
 
-        ttk.Label(self.master, text="Defect Rate:").grid(row=9, column=2, padx=5, pady=2)
+        ttk.Label(self.master, text="Defect Rate (%):").grid(row=9, column=2, padx=5, pady=2)
         self.m2_defect_rate = ttk.Entry(self.master)
         self.m2_defect_rate.insert(0, str(self.env.machine2.defect_rate))
         self.m2_defect_rate.grid(row=9, column=3, padx=5, pady=2)
         
         # Buffer
         ttk.Label(self.master, text="Buffer").grid(row=3, column=0, columnspan=2, pady=5)
-        ttk.Label(self.master, text="Holding Cost:").grid(row=4, column=0, padx=5, pady=2)
-        self.buffer_holding_cost = ttk.Entry(self.master)
-        self.buffer_holding_cost.insert(0, str(self.env.buffer.holding_cost))
-        self.buffer_holding_cost.grid(row=4, column=1, padx=5, pady=2)
+        #ttk.Label(self.master, text="Holding Cost ():").grid(row=4, column=0, padx=5, pady=2)
+        #self.buffer_holding_cost = ttk.Entry(self.master)
+        #self.buffer_holding_cost.insert(0, str(self.env.buffer.holding_cost))
+        #self.buffer_holding_cost.grid(row=4, column=1, padx=5, pady=2)
         
-        ttk.Label(self.master, text="Max Capacity:").grid(row=5, column=0, padx=5, pady=2)
+        ttk.Label(self.master, text="Max Capacity (units):").grid(row=5, column=0, padx=5, pady=2)
         self.buffer_max_capacity = ttk.Entry(self.master)
         self.buffer_max_capacity.insert(0, str(self.env.buffer.max_capacity))
         self.buffer_max_capacity.grid(row=5, column=1, padx=5, pady=2)
         
         # Produced Goods
         ttk.Label(self.master, text="Produced Goods").grid(row=6, column=0, columnspan=2, pady=5)
-        ttk.Label(self.master, text="Holding Cost:").grid(row=7, column=0, padx=5, pady=2)
-        self.pg_holding_cost = ttk.Entry(self.master)
-        self.pg_holding_cost.insert(0, str(self.env.produced_goods.holding_cost))
-        self.pg_holding_cost.grid(row=7, column=1, padx=5, pady=2)
+        ttk.Label(self.master, text="Max Capacity (units):").grid(row=7, column=0, padx=5, pady=2)
+        self.pg_max_capacity = ttk.Entry(self.master)
+        self.pg_max_capacity.insert(0, str(self.env.produced_goods.max_capacity))
+        self.pg_max_capacity.grid(row=7, column=1, padx=5, pady=2)
 
-        ttk.Label(self.master, text="Selling Cost:").grid(row=8, column=0, padx=5, pady=2)
-        self.pg_selling_cost = ttk.Entry(self.master)
-        self.pg_selling_cost.insert(0, str(self.env.produced_goods.selling_cost))
-        self.pg_selling_cost.grid(row=8, column=1, padx=5, pady=2)
+        #ttk.Label(self.master, text="Selling Cost:").grid(row=8, column=0, padx=5, pady=2)
+        #self.pg_selling_cost = ttk.Entry(self.master)
+        #self.pg_selling_cost.insert(0, str(self.env.produced_goods.selling_cost))
+        #self.pg_selling_cost.grid(row=8, column=1, padx=5, pady=2)
 
         # Simulation Parameters 
-        ttk.Label(self.master, text="Mean Demand:").grid(row=9, column=0, padx=5, pady=2)
+        ttk.Label(self.master, text="Mean Demand (units):").grid(row=9, column=0, padx=5, pady=2)
         self.demand_mean = ttk.Entry(self.master)
         self.demand_mean.insert(0, str(self.env.demand_mean))
         self.demand_mean.grid(row=9, column=1, padx=5, pady=2)
         
-        ttk.Label(self.master, text="Demand Standard Deviation:").grid(row=10, column=0, padx=5, pady=2)
+        ttk.Label(self.master, text="Demand StDeviation (units):").grid(row=10, column=0, padx=5, pady=2)
         self.demand_std = ttk.Entry(self.master)
         self.demand_std.insert(0, str(self.env.demand_std))
         self.demand_std.grid(row=10, column=1, padx=5, pady=2)
@@ -285,15 +285,15 @@ class SimulationUI:
         self.env.machine2.mttf = float(self.m2_mttf.get())
         self.env.machine2.mttr = float(self.m2_mttr.get())
         self.env.machine2.defect_rate = float(self.m2_defect_rate.get())
-        self.env.buffer.holding_cost = float(self.buffer_holding_cost.get())
+        #self.env.buffer.holding_cost = float(self.buffer_holding_cost.get())
         self.env.buffer.max_capacity = int(self.buffer_max_capacity.get())
-        self.env.produced_goods.holding_cost = float(self.pg_holding_cost.get())
-        self.env.produced_goods.selling_cost = float(self.pg_selling_cost.get())
+        self.env.produced_goods.max_capacity = float(self.pg_max_capacity.get())
+        #self.env.produced_goods.selling_cost = float(self.pg_selling_cost.get())
         self.env.demand_mean = float(self.demand_mean.get())
         self.env.demand_std = float(self.demand_std.get())
-        
+
         # Run simulation for 100 steps
-        for _ in range(100):
+        for _ in range(48):
             state = self.env.step()
             self.history['raw_material_stock'].append(state['raw_material_stock'])
             self.history['production_m1'].append(state['production_m1'])
