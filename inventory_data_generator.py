@@ -35,7 +35,7 @@ def serialize_example(data):
 
 def generate_data(steps, output_file):
     env = SimulationEnvironment()
-    output_path = os.path.join('output/', output_file)
+    output_path = os.path.join(output_file)
     with tf.io.TFRecordWriter(output_path) as writer:
         for _ in range(steps):
             data = env.step()
