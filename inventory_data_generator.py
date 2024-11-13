@@ -59,7 +59,7 @@ def generate_data(steps, output_file):
             env.produced_goods.max_capacity = random.randint(80, 150)
             env.demand_mean = random.randint(3, 15)
             env.demand_std = random.uniform(0.5, 3.5)
-            for _ in range(steps/100):
+            for _ in range(int(steps/100)):
                 data = env.step()
                 data.update({
                     'lead_time': env.raw_material.lead_time,
