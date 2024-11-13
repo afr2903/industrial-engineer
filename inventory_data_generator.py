@@ -43,10 +43,10 @@ def generate_data(steps, output_file):
         writer = csv.writer(csvfile)
         # Add header
         header = [
-            'buffer_level', 'produced_goods_level', 'demand', 'fulfilled_demand', 'production_m1', 'production_m2',
-            'lead_time', 'reorder_point', 'reorder_quantity', 'inventory_max_capacity', 'inventory_position',
-            'inventory_on_hand', 'm1_max_production_rate', 'm1_status', 'm1_mttf', 'm1_mttr', 'm1_defect_rate',
-            'm1_downtime', 'm2_max_production_rate', 'm2_status', 'm2_mttf', 'm2_mttr', 'm2_defect_rate', 'm2_downtime',
+            'production_m1', 'production_m2', 'buffer_level', 'produced_goods_level', 'demand', 'fulfilled_demand',
+            'm1_status', 'm2_status','lead_time', 'reorder_point', 'reorder_quantity', 'inventory_max_capacity', 'inventory_position',
+            'inventory_on_hand', 'm1_max_production_rate', 'm1_mttf', 'm1_mttr', 'm1_defect_rate',
+            'm1_downtime', 'm2_max_production_rate', 'm2_mttf', 'm2_mttr', 'm2_defect_rate', 'm2_downtime',
             'buffer_max_capacity', 'produced_goods_max_capacity']
         writer.writerow(header)
         for _ in range(100):
@@ -77,13 +77,11 @@ def generate_data(steps, output_file):
                     'inventory_position': env.raw_material.inventory_position,
                     'inventory_on_hand': env.raw_material.inventory_on_hand,
                     'm1_max_production_rate': env.machine1.max_production_rate,
-                    'm1_status': env.machine1.status,
                     'm1_mttf': env.machine1.mttf,
                     'm1_mttr': env.machine1.mttr,
                     'm1_defect_rate': env.machine1.defect_rate,
                     'm1_downtime': env.machine1.downtime,
                     'm2_max_production_rate': env.machine2.max_production_rate,
-                    'm2_status': env.machine2.status,
                     'm2_mttf': env.machine2.mttf,
                     'm2_mttr': env.machine2.mttr,
                     'm2_defect_rate': env.machine2.defect_rate,
