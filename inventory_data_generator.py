@@ -1,4 +1,5 @@
 import os
+import random
 import tensorflow as tf
 from inventory_system import SimulationEnvironment
 
@@ -60,6 +61,24 @@ def generate_data(steps, output_file):
             })
             example = serialize_example(data)
             writer.write(example)
+
+            # Randomize data for the next step
+            env.raw_material.lead_time = random.randint(5, 10)
+            env.raw_material.reorder_point = random.randint(5, 15)
+            env.raw_material.reorder_quantity = random.randint(20, 40)
+            env.raw_material.max_capacity = random.randint(80, 120)
+            env.machine1.max_production_rate = random.randint(5, 30)
+            env.machine1.mttf = random.randint(70, 120)
+            env.machine1.mttr = random.randint(15, 30)
+            env.machine1.defect_rate = random.uniform(0.01, 0.07)
+            env.machine2.max_production_rate = random.randint(5, 30)
+            env.machine2.mttf = random.randint(70, 120)
+            env.machine2.mttr = random.randint(15, 30)
+            env.machine2.defect_rate = random.uniform(0.01, 0.07)
+            env.buffer.max_capacity = random.randint(20, 60)
+            env.produced_goods.max_capacity = random.randint(80, 150)
+            env.demand_mean = random.randint(3, 15)
+            env.demand_std = random.uniform(0.5, 3.5)
 
 if __name__ == "__main__":
     generate_data(1000, 'inventory_data.tfrecord')
