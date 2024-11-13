@@ -1,9 +1,9 @@
 import os
 import random
-import tensorflow as tf
 import csv
 from inventory_system import SimulationEnvironment
 
+"""
 def serialize_example(data):
     feature = {
         'm1_production': tf.train.Feature(float_list=tf.train.FloatList(value=[data['production_m1']])),
@@ -35,6 +35,7 @@ def serialize_example(data):
     }
     example_proto = tf.train.Example(features=tf.train.Features(feature=feature))
     return example_proto.SerializeToString()
+"""
 
 def generate_data(steps, output_file):
     env = SimulationEnvironment()
