@@ -8,8 +8,8 @@ import matplotlib.pyplot as plt
 data = pd.read_csv('inventory_data.csv')
 
 # Define input and output features
-X = data[['buffer_level', 'produced_goods_level', 'demand', 'fulfilled_demand', 'lead_time', 'inventory_max_capacity', 'inventory_position', 'inventory_on_hand', 'm1_max_production_rate', 'm1_mttf', 'm1_mttr', 'm1_defect_rate', 'm2_max_production_rate', 'm2_mttf', 'm2_mttr', 'm2_defect_rate', 'buffer_max_capacity', 'produced_goods_max_capacity']]
-Y = data[['m1_production', 'm2_production', 'reorder_point', 'reorder_quantity', 'm1_status', 'm1_downtime', 'm2_status', 'm2_downtime']]
+X = data[['buffer_level', 'produced_goods_level', 'demand', 'fulfilled_demand', 'lead_time', 'inventory_max_capacity', 'inventory_position', 'inventory_on_hand', 'm1_max_production_rate', 'm1_mttf', 'm1_mttr', 'm1_defect_rate', 'm2_max_production_rate', 'm2_mttf', 'm2_mttr', 'm2_defect_rate', 'buffer_max_capacity', 'produced_goods_max_capacity']].values.astype(np.float32)
+Y = data[['m1_production', 'm2_production', 'reorder_point', 'reorder_quantity', 'm1_status', 'm1_downtime', 'm2_status', 'm2_downtime']].values.astype(np.float32)
 
 # Split the dataset into training and testing sets
 X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
