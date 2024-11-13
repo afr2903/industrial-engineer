@@ -125,12 +125,12 @@ class SimulationEnvironment:
         self.accumulated_fulfilled_demand += fulfilled_demand
 
         return {
-            "production_m1": production_m1,
-            "production_m2": production_m2,
-            "buffer_level": self.buffer.capacity,
-            "produced_goods_level": self.produced_goods.capacity,
-            "demand": demand,
-            "fulfilled_demand": fulfilled_demand,
+            "production_m1": float(production_m1),
+            "production_m2": float(production_m2),
+            "buffer_level": float(self.buffer.capacity),
+            "produced_goods_level": float(self.produced_goods.capacity),
+            "demand": float(demand),
+            "fulfilled_demand": float(fulfilled_demand),
             "m1_status": self.machine1.status,
             "m2_status": self.machine2.status
         }
