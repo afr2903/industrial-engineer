@@ -1,9 +1,9 @@
 import random
 import numpy as np
-import tkinter as tk
-from tkinter import ttk
+#import tkinter as tk
+#from tkinter import ttk
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+#from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
 class RawMaterialInventory:
     def __init__(self, lead_time, reorder_point, reorder_quantity, max_capacity):
@@ -125,18 +125,17 @@ class SimulationEnvironment:
         self.accumulated_fulfilled_demand += fulfilled_demand
 
         return {
-            "raw_material_stock": self.raw_material.inventory_on_hand,
             "production_m1": production_m1,
             "production_m2": production_m2,
             "buffer_level": self.buffer.capacity,
             "produced_goods_level": self.produced_goods.capacity,
-            "demand": self.accumulated_demand,
-            "fulfilled_demand": self.accumulated_fulfilled_demand,
+            "demand": demand,
+            "fulfilled_demand": fulfilled_demand,
             "m1_status": self.machine1.status,
             "m2_status": self.machine2.status
         }
 
-class SimulationUI:
+"""class SimulationUI:
     def __init__(self, master):
         self.master = master
         self.master.title("Manufacturing Simulation")
@@ -379,3 +378,5 @@ if __name__ == "__main__":
     root = tk.Tk()
     app = SimulationUI(root)
     app.run()
+
+    """
