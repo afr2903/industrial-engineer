@@ -3,6 +3,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 import tensorflow as tf
 import matplotlib.pyplot as plt
+import numpy as np
 
 # Load the dataset from TFRecord file
 data = pd.read_csv('inventory_data.csv')
