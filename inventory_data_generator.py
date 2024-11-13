@@ -43,7 +43,7 @@ def generate_data(steps, output_file):
         writer = csv.writer(csvfile)
         # Add header
         header = [
-            'production_m1', 'production_m2', 'buffer_level', 'produced_goods_level', 'demand', 'fulfilled_demand',
+            'm1_production', 'm2_production', 'buffer_level', 'produced_goods_level', 'demand', 'fulfilled_demand',
             'm1_status', 'm2_status','lead_time', 'reorder_point', 'reorder_quantity', 'inventory_max_capacity', 'inventory_position',
             'inventory_on_hand', 'm1_max_production_rate', 'm1_mttf', 'm1_mttr', 'm1_defect_rate',
             'm1_downtime', 'm2_max_production_rate', 'm2_mttf', 'm2_mttr', 'm2_defect_rate', 'm2_downtime',
