@@ -39,8 +39,16 @@ def serialize_example(data):
 def generate_data(steps, output_file):
     env = SimulationEnvironment()
     output_path = os.path.join(output_file)
-    with open(output_path, 'w', newline='') as csvfile:
+    with open(output_path, 'w', newline='', encoding='utf-8') as csvfile:
         writer = csv.writer(csvfile)
+        # Add header
+        header = [
+            'buffer_level', 'produced_goods_level', 'demand', 'fulfilled_demand', 'production_m1', 'production_m2',
+            'lead_time', 'reorder_point', 'reorder_quantity', 'inventory_max_capacity', 'inventory_position',
+            'inventory_on_hand', 'm1_max_production_rate', 'm1_status', 'm1_mttf', 'm1_mttr', 'm1_defect_rate',
+            'm1_downtime', 'm2_max_production_rate', 'm2_status', 'm2_mttf', 'm2_mttr', 'm2_defect_rate', 'm2_downtime',
+            'buffer_max_capacity', 'produced_goods_max_capacity']
+        writer.writerow(header)
         for _ in range(100):
             # Randomize data for the next step
             env.raw_material.lead_time = random.randint(5, 10)
