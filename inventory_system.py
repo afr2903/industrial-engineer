@@ -1,9 +1,16 @@
+import os
 import random
 import numpy as np
-#import tkinter as tk
-#from tkinter import ttk
+import tkinter as tk
+from dotenv import load_dotenv
+from tkinter import ttk
 import matplotlib.pyplot as plt
-#from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+#import tensorflow as tf
+import google.generativeai as genai
+import google.ai.generativelanguage as glm
+from openai import OpenAI
+import pygame
 
 class RawMaterialInventory:
     def __init__(self, lead_time, reorder_point, reorder_quantity, max_capacity):
@@ -125,23 +132,35 @@ class SimulationEnvironment:
         self.accumulated_fulfilled_demand += fulfilled_demand
 
         return {
-            "production_m1": float(production_m1),
-            "production_m2": float(production_m2),
-            "buffer_level": float(self.buffer.capacity),
-            "produced_goods_level": float(self.produced_goods.capacity),
-            "demand": float(demand),
-            "fulfilled_demand": float(fulfilled_demand),
+            "raw_material_stock": self.raw_material.inventory_on_hand,
+            "production_m1": production_m1,
+            "production_m2": production_m2,
+            "buffer_level": self.buffer.capacity,
+            "produced_goods_level": self.produced_goods.capacity,
+            "demand": self.accumulated_demand,
+            "fulfilled_demand": self.accumulated_fulfilled_demand,
             "m1_status": self.machine1.status,
             "m2_status": self.machine2.status
         }
 
-"""class SimulationUI:
+class SimulationUI:
     def __init__(self, master):
         self.master = master
         self.master.title("Manufacturing Simulation")
         
         self.env = SimulationEnvironment()
+        #self.model = tf.keras.models.load_model("inventory_model.keras")
+        #print(self.model.summary())
         
+        load_dotenv()
+        genai.configure(api_key=os.getenv('GOOGLE_API_KEY'))
+        self.gemini = genai.GenerativeModel('gemini-1.5-flash')
+
+        self.openai = OpenAI(api_key=os.getenv('OPENAI_API_KEY'))
+        pygame.mixer.init()
+
+        self.first_run = True
+
         self.history = {
             'raw_material_stock': [],
             'production_m1': [],
@@ -257,18 +276,19 @@ class SimulationEnvironment:
         self.demand_std.insert(0, str(self.env.demand_std))
         self.demand_std.grid(row=10, column=1, padx=5, pady=2)
         
-        ttk.Button(self.master, text="Update", command=self.update_simulation).grid(row=11, column=0, columnspan=2, pady=10)
+        #ttk.Button(self.master, text="Analyze", command=self.analyze).grid(row=11, column=0, columnspan=2, pady=10)
+        ttk.Button(self.master, text="Analyze & Run", command=self.update_simulation).grid(row=11, column=0, columnspan=2, pady=10)
         
         # Create canvas for machine and buffer visualization
         self.canvas = tk.Canvas(self.master, width=550, height=370)
-        self.canvas.grid(row=12, column=0, rowspan=5, columnspan=4, padx=3, pady=0)
+        self.canvas.grid(row=13, column=0, rowspan=5, columnspan=4, padx=3, pady=0)
         
     def create_plot(self):
         # Demand fullfilled vs demand
         self.fig, self.ax = plt.subplots(3, sharex=True, figsize=(8, 8))
         self.canvas_plot = FigureCanvasTkAgg(self.fig, master=self.master)
         self.canvas_plot_widget = self.canvas_plot.get_tk_widget()
-        self.canvas_plot_widget.grid(row=0, column=5, rowspan=16, columnspan=2, padx=3, pady=3)
+        self.canvas_plot_widget.grid(row=0, column=5, rowspan=17, columnspan=2, padx=3, pady=3)
 
         
     def update_simulation(self):
@@ -290,6 +310,11 @@ class SimulationEnvironment:
         #self.env.produced_goods.selling_cost = float(self.pg_selling_cost.get())
         self.env.demand_mean = float(self.demand_mean.get())
         self.env.demand_std = float(self.demand_std.get())
+
+        if self.first_run:
+            self.first_run = False
+        else:
+            self.analyze()
 
         # Run simulation for 100 steps
         for _ in range(48):
@@ -369,6 +394,71 @@ class SimulationEnvironment:
         # Draw inventory levels
         self.canvas.create_text(75, 180, text=f"Raw: {self.env.raw_material.inventory_on_hand}")
         self.canvas.create_text(325, 180, text=f"Produced: {self.env.produced_goods.capacity}")
+
+    def analyze(self):
+        #input_data = {key: tf.convert_to_tensor(value, dtype=tf.float32) for key, value in input_data.items()}
+        #predictions = self.model.predict(input_data)
+        #print(predictions)
+        user_request = f"""You are an expert in manufacturing and inventory systems, a factory manager to decide
+                           on the production rates and inventory levels that are optimal for the system.
+                           Given the current state of the system with {self.env.buffer.capacity}
+                           units in the buffer, {self.env.produced_goods.capacity} units of produced goods,
+                           a demand of {self.env.accumulated_demand} from last step, a fulfilled demand of
+                            {self.env.accumulated_fulfilled_demand} from last step, and the following parameters:
+                            - Raw Material Inventory:
+                                - Lead time: {self.env.raw_material.lead_time}
+                                - Max Capacity: {self.env.raw_material.max_capacity}
+                                - Inventory Position: {self.env.raw_material.inventory_position}
+                                - Inventory on Hand: {self.env.raw_material.inventory_on_hand}
+                            - Machine 1:
+                                - Max Production Rate: {self.env.machine1.max_production_rate}
+                                - MTTF: {self.env.machine1.mttf}
+                                - MTTR: {self.env.machine1.mttr}
+                                - Defect Rate: {self.env.machine1.defect_rate}
+                            - Machine 2:
+                                - Max Production Rate: {self.env.machine2.max_production_rate}
+                                - MTTF: {self.env.machine2.mttf}
+                                - MTTR: {self.env.machine2.mttr}
+                                - Defect Rate: {self.env.machine2.defect_rate}
+                            - Buffer:
+                                - Max Capacity: {self.env.buffer.max_capacity}
+                            - Produced Goods:
+                                - Max Capacity: {self.env.produced_goods.max_capacity}
+                            Analyze how the values of: Reorder Point, Reorder Quantity, and Production Rates
+                            should be adjusted to make sure to fullfill the demand, specifically refer the
+                            improvements on how the KPIs of Efficiency (actual production rate / max production rate),
+                            Inventory Turnover (production rate / inventory position), and Lead Time to Delivery
+                            (time between order and delivery) can be improved.
+                            Give me a brief explanation of up to 200 characters on this analysis being concise but including
+                            some numbers and metrics to support your analysis."""
+        response = self.gemini.generate_content([user_request], stream=False)
+        self.past_analysis = response.text
+        print(response.text)
+        speech = self.openai.audio.speech.create(
+            model="tts-1",
+            voice="echo",
+            input=response.text
+        )
+
+        temp_file = "output.opus"
+        speech.stream_to_file(temp_file)
+
+        pygame.mixer.music.load(temp_file)
+        pygame.mixer.music.play()
+
+        tk.messagebox.showinfo("Analysis", response.text)
+
+        while pygame.mixer.music.get_busy():
+            pygame.time.Clock().tick(10)
+
+
+    def decide_action(self, data):
+        """Decide the numbers for this step based on the current state of the system"""
+        user_request = """You are an expert in manufacturing and inventory systems, a factory manager to decide
+                         on how to adapt the production rates and inventory levels that are optimal for the system.
+                        Given the current state of the system with
+        """
+
         
     def run(self):
         self.update_simulation()
@@ -379,4 +469,3 @@ if __name__ == "__main__":
     app = SimulationUI(root)
     app.run()
 
-    """
