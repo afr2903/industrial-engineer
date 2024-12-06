@@ -144,6 +144,6 @@ class SimulationEnvironment:
             "produced_goods_level": self.produced_goods.capacity,
             "demand": demand,
             "fulfilled_demand": fulfilled_demand,
-            "m1_status": self.machine1.status,
-            "m2_status": self.machine2.status
+            "m1_status": 1 if self.machine1.status == "operational" else 0,
+            "m2_status": 1 if self.machine2.status == "operational" else 0,
         }
