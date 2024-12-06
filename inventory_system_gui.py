@@ -223,9 +223,9 @@ class SimulationUI:
         self.canvas.create_text(75, 120, text="Raw Material")
         
         # Draw machines
-        self.canvas.create_rectangle(150, 50, 200, 100, fill="green" if self.simulation.machine1.status == "operational" else "red")
+        self.canvas.create_rectangle(150, 50, 200, 100, fill="green" if self.simulation.machine1.status else "red")
         self.canvas.create_text(175, 120, text="M1")
-        self.canvas.create_rectangle(350, 50, 400, 100, fill="green" if self.simulation.machine2.status == "operational" else "red")
+        self.canvas.create_rectangle(350, 50, 400, 100, fill="green" if self.simulation.machine2.status else "red")
         self.canvas.create_text(375, 120, text="M2")
         
         # Draw buffer

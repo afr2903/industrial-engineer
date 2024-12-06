@@ -138,12 +138,13 @@ class SimulationEnvironment:
         self.accumulated_fulfilled_demand += fulfilled_demand
 
         return {
+            "raw_material_level": self.raw_material.inventory_on_hand,
             "production_m1": production_m1,
             "production_m2": production_m2,
             "buffer_level": self.buffer.capacity,
             "produced_goods_level": self.produced_goods.capacity,
-            "demand": demand,
-            "fulfilled_demand": fulfilled_demand,
+            "demand": self.accumulated_demand,
+            "fulfilled_demand": self.accumulated_fulfilled_demand,
             "m1_status": 1 if self.machine1.status == "operational" else 0,
             "m2_status": 1 if self.machine2.status == "operational" else 0,
         }
